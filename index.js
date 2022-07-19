@@ -33,15 +33,20 @@ require("./sources/asynchronousModules.js").asynchronousImports().then(async asy
     let save = JSON.parse(nodeFS.readFileSync(savePath).toString());
     
     // Variables
-    let [ displayColumns, displayRows ] = terminalInterface.getSize(); 
+    let blank = new Array(presets.minimumColumns * presets.minimumRows).fill(" ");
+    let cache = new Map();
+    let [ displayColumns, displayRows ] = terminalInterface.getSize();
     let displaySatisfied = isDisplaySatisfied(displayColumns, displayRows);
-    let frame = new Array(presets.minimumColumns * presets.minimumRows);
-    let render = new Array(presets.minimumColumns * presets.minimumRows);
+    let frame = [ ...blank ];
+    let inputQueue = new Array(save.inputQueue);
+    let render = [ ...blank ];
     let scene = "start";
+    let startTimestamp = Date.now();
 
-    // Key-press Event
-    terminalInterface.controls.on("key", key => {
-        if(key.name === save.controls.exit) process.exit();
+    // Input Event
+    terminalInterface.controls.on("input", input => {
+        if(inputQueue.length > save.inputQueue) inputQueue = inputQueue.slice(inputQueue.length - save.inputQueue);
+        inputQueue.push(input);
     });
 
     // Resize Event
@@ -49,21 +54,58 @@ require("./sources/asynchronousModules.js").asynchronousImports().then(async asy
         terminalInterface.clear();
         [ displayColumns, displayRows ] = [ columns, rows ];
         displaySatisfied = isDisplaySatisfied(displayColumns, displayRows);
-        frame = new Array(presets.minimumColumns * presets.minimumRows);
+        frame = [ ...blank ];
         checkDisplaySize();
     });
 
     // Displays Terminal
     terminalInterface.clear();
     checkDisplaySize();
-    let a = 1;
     setInterval(() => {
+        // Fetches Input
+        let input = inputQueue.length ? inputQueue.shift() : null;
+        if(input && input.name === save.controls.exit) process.exit();
+
         // Renders Scene
         if(!displaySatisfied) return;
         switch(scene) {
             case "start": {
                 let title = assets.title.split("\n").map(v => " ".repeat(Math.floor((presets.minimumColumns - 80) / 2)) + v);
+                let choices = [ "Continue", "New Game", "Settings", "Exit" ];
+                if(!cache.has("start_index")) cache.set("start_index", 1);
+                if(!cache.has("start_save_init")) cache.set("start_save_init", !!save.username);
+                if(input) {
+                    let startIndex = cache.get("start_index");
+                    if(input.name === save.controls.up && (startIndex - 1) > +(!cache.get("start_index")))
+                        cache.set("start_index", startIndex - 1);
+                    else if(input.name === save.controls.down && (startIndex + 1) < choices.length)
+                        cache.set("start_index", startIndex + 1);
+                    else if(input.name === save.controls.select) {
+                        switch(startIndex) {
+                            case 1: {
+                                scene = "test";
+                                break;
+                            };
+                            case 2: {
+                                scene = "settings";
+                                break;
+                            };
+                            case 3: process.exit();
+                            default: break;
+                        };
+                    };
+                };
                 for(let i = 0; i < title.length; i++) render.splice((i + 5) * presets.minimumColumns, title[i].length, ...title[i]);
+                for(let i = 0; i < choices.length; i++) {
+                    let choiceRaw = choices[i];
+                    let choice = [];
+                    let padding = " ".repeat(3 - (getTick() % 3));
+                    if(i === 0 && !cache.get("start_save_init")) choice = choiceRaw.split("").map(v => chalk.blackBright(v));
+                    else if(i === cache.get("start_index")) choice = `>${padding} ${choiceRaw} ${padding}<`.split("").map(v => chalk.yellowBright(v));
+                    else choice = choiceRaw.split("");
+                    choice = new Array(Math.floor((presets.minimumColumns - choice.length) / 2)).fill(" ").concat(choice);
+                    render.splice((i + 30) * presets.minimumColumns, choice.length, ...choice);
+                };
                 break;
             };
             default: break;
@@ -90,8 +132,7 @@ require("./sources/asynchronousModules.js").asynchronousImports().then(async asy
             process.stdout.write(renderDifference.string);
         };
         frame = render;
-        render = new Array(presets.minimumColumns * presets.minimumRows);
-        // process.exit();
+        render = [ ...blank ];
     }, 1000 / presets.framerate);
 
     // Functions
@@ -117,5 +158,9 @@ require("./sources/asynchronousModules.js").asynchronousImports().then(async asy
 
     function isDisplaySatisfied(columns, rows) {
         return columns >= presets.minimumColumns && rows >= presets.minimumRows;
+    };
+
+    function getTick() {
+        return Math.floor((Date.now() - startTimestamp) / presets.framerate);
     };
 });

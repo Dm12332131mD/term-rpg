@@ -15,7 +15,7 @@ process.stdout.write("\x1b[?25l");
 
 // Events
 let controls = new NodeEvents();
-process.stdin.on("keypress", (string, key) => controls.emit("key", { string, ...key }));
+process.stdin.on("keypress", (string, key) => controls.emit("input", { string, ...key }));
 process.stdout.on("resize", () => controls.emit("resize", ...getSize()));
 
 // Functions

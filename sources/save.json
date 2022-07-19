@@ -10,6 +10,7 @@
         "up": "up"
     },
     "gold": 0,
+    "inputQueue": 3,
     "inventory": [],
     "experience": 0,
     "username": null,
