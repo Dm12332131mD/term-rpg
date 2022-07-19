@@ -1,0 +1,17 @@
+{
+    "armor": null,
+    "controls": {
+        "cancel": "x",
+        "down": "down",
+        "exit": "escape",
+        "left": "left",
+        "right": "right",
+        "select": "z",
+        "up": "up"
+    },
+    "gold": 0,
+    "inventory": [],
+    "experience": 0,
+    "username": null,
+    "weapon": null
+}

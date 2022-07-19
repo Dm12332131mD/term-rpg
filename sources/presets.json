@@ -1,0 +1,7 @@
+{
+    "framerate": 10,
+    "minimumColumns": 200,
+    "minimumRows": 50,
+    "requiredColumns": 40,
+    "requiredRows": 4
+}

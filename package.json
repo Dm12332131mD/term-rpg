@@ -1,0 +1,16 @@
+{
+  "name": "term-rpg",
+  "version": "1.0.0",
+  "description": "Terminal RPG by Dm123321_31mD Gaming",
+  "main": "index.js",
+  "scripts": {},
+  "keywords": [
+    "term-rpg"
+  ],
+  "author": "Dm123321_31mD Gaming",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.0.1",
+    "string-width": "^5.1.2"
+  }
+}
